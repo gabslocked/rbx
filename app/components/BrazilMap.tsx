@@ -2,18 +2,31 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
+import dynamic from "next/dynamic"
 import { MapPin, DollarSign, TrendingUp, Target, Award, Zap } from "lucide-react"
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
-import L from "leaflet" // Import L for custom icons
+import type { LatLngExpression } from "leaflet"
 
-// Fix for default icon issue with Webpack
-delete (L.Icon.Default.prototype as any)._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
-})
+// Dynamic imports to avoid SSR issues
+const MapContainer = dynamic(
+  () => import("react-leaflet").then((mod) => mod.MapContainer),
+  { ssr: false }
+)
+
+const TileLayer = dynamic(
+  () => import("react-leaflet").then((mod) => mod.TileLayer),
+  { ssr: false }
+)
+
+const Marker = dynamic(
+  () => import("react-leaflet").then((mod) => mod.Marker),
+  { ssr: false }
+)
+
+const Popup = dynamic(
+  () => import("react-leaflet").then((mod) => mod.Popup),
+  { ssr: false }
+)
 
 interface BrazilMapProps {
   data?: any[]
@@ -90,6 +103,17 @@ const BrazilMap: React.FC<BrazilMapProps> = ({ data = [] }) => {
 
   useEffect(() => {
     setIsClient(true)
+    
+    // Fix leaflet default icon issues only on client
+    if (typeof window !== "undefined") {
+      const L = require("leaflet")
+      delete (L.Icon.Default.prototype as any)._getIconUrl
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+        iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+      })
+    }
   }, [])
 
   useEffect(() => {
@@ -181,6 +205,9 @@ const BrazilMap: React.FC<BrazilMapProps> = ({ data = [] }) => {
   }
 
   const createCustomIcon = (avgPrice: number) => {
+    if (!isClient || typeof window === "undefined") return undefined
+    
+    const L = require("leaflet")
     let markerColor = "#666666" // Default gray for no data or zero price
     if (avgPrice > 0) {
       if (avgPrice < 10)
@@ -240,7 +267,7 @@ const BrazilMap: React.FC<BrazilMapProps> = ({ data = [] }) => {
         <div className="relative h-[500px]">
           {isClient && cityData.length > 0 ? (
             <MapContainer
-              center={[-14.235, -51.9253]}
+              center={[-14.235, -51.9253] as LatLngExpression}
               zoom={4}
               scrollWheelZoom={true}
               style={{ height: "100%", width: "100%" }}
@@ -249,9 +276,11 @@ const BrazilMap: React.FC<BrazilMapProps> = ({ data = [] }) => {
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
-              {cityData.map((city) => (
-                <Marker key={city.city} position={[city.lat, city.lng]} icon={createCustomIcon(city.avgPrice)}>
-                  <Popup>
+              {cityData.map((city) => {
+                const icon = createCustomIcon(city.avgPrice)
+                return (
+                  <Marker key={city.city} position={[city.lat, city.lng] as LatLngExpression} icon={icon}>
+                    <Popup>
                     <div className="p-1 min-w-[200px]">
                       <h3 className="text-base font-bold text-gray-800 mb-1">
                         {city.city}, {city.state}
@@ -272,9 +301,10 @@ const BrazilMap: React.FC<BrazilMapProps> = ({ data = [] }) => {
                         </div>
                       </div>
                     </div>
-                  </Popup>
-                </Marker>
-              ))}
+                    </Popup>
+                  </Marker>
+                )
+              })}
             </MapContainer>
           ) : (
             <div className="flex items-center justify-center h-full bg-gray-50">
