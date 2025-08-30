@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-stone-50 text-gray-800;
+  }
+}
+
+@keyframes blob-1 {
+  0% {
+    transform: translateY(0px) translateX(0px) scale(1);
+  }
+  33% {
+    transform: translateY(-50px) translateX(80px) scale(1.1);
+  }
+  66% {
+    transform: translateY(40px) translateX(-70px) scale(0.9);
+  }
+  100% {
+    transform: translateY(0px) translateX(0px) scale(1);
+  }
+}
+
+@keyframes blob-2 {
+  0% {
+    transform: translateY(0px) translateX(0px) scale(1);
+  }
+  33% {
+    transform: translateY(60px) translateX(-90px) scale(1.1);
+  }
+  66% {
+    transform: translateY(-40px) translateX(50px) scale(0.9);
+  }
+  100% {
+    transform: translateY(0px) translateX(0px) scale(1);
+  }
+}
+
+@keyframes blob-3 {
+  0% {
+    transform: translateY(0px) translateX(0px) scale(1);
+  }
+  33% {
+    transform: translateY(-30px) translateX(-100px) scale(1.2);
+  }
+  66% {
+    transform: translateY(80px) translateX(40px) scale(0.8);
+  }
+  100% {
+    transform: translateY(0px) translateX(0px) scale(1);
+  }
+}
